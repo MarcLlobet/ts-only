@@ -10,9 +10,6 @@
   "bin": {
     "ts-only": "dist/cli.js"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "scripts": {
     "build": "rm -rf dist && tsc",
     "start": "node dist/cli.js",
