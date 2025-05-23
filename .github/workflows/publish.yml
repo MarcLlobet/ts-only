@@ -34,4 +34,4 @@ jobs:
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.TS_ONLY_PACKAGE_TOKEN }}
-        run: npm publish
+        run: npm publish --access public
