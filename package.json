@@ -1,0 +1,49 @@
+{
+  "name": "ts-only",
+  "version": "1.0.0",
+  "description": "No js allowed!",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/index.js"
+  ],
+  "bin": {
+    "ts-only": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "start": "node dist/cli.js",
+    "test": "jest",
+    "dev": "ts-node src/cli.ts",
+    "lint": "eslint --config ./eslint.config.ts",
+    "tscheck": "tsc --project tsconfig.json",
+    "dependencies": "depcheck --ignore-pattern=dist",
+    "prepare": "husky || true",
+    "precommit": "bash .husky/pre-commit"
+  },
+  "keywords": [
+    "typescript",
+    "javascript",
+    "developer experience"
+  ],
+  "author": "Marc Llobet",
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.27.0",
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.0.0",
+    "@types/node": "^22.15.21",
+    "depcheck": "^1.4.7",
+    "eslint": "^9.27.0",
+    "eslint-config-prettier": "^10.1.5",
+    "husky": "^9.1.7",
+    "jest": "^29.0.0",
+    "jiti": "^2.4.2",
+    "prettier": "^3.5.3",
+    "ts-jest": "^29.3.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.32.1"
+  },
+  "dependencies": {}
+}

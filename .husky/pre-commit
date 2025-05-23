@@ -1,0 +1,4 @@
+yarn lint
+yarn tscheck
+yarn test
+yarn build
