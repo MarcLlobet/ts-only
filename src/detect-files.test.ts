@@ -1,19 +1,19 @@
-import { mkdirSync, writeFileSync, rmSync } from "fs";
+import fs from "node:fs";
 import { detectFiles } from "./detect-files";
 
 describe("detectFiles", () => {
   const testDir = "test-dir";
 
   beforeAll(() => {
-    mkdirSync(testDir);
-    writeFileSync(`${testDir}/file1.js`, "");
-    writeFileSync(`${testDir}/file2.ts`, "");
-    mkdirSync(`${testDir}/subdir`);
-    writeFileSync(`${testDir}/subdir/file3.js`, "");
+    fs.mkdirSync(testDir);
+    fs.writeFileSync(`${testDir}/file1.js`, "");
+    fs.writeFileSync(`${testDir}/file2.ts`, "");
+    fs.mkdirSync(`${testDir}/subdir`);
+    fs.writeFileSync(`${testDir}/subdir/file3.js`, "");
   });
 
   afterAll(() => {
-    rmSync(testDir, { recursive: true, force: true });
+    fs.rmSync(testDir, { recursive: true, force: true });
   });
 
   it("should detect files with allowed extensions", () => {
@@ -43,7 +43,7 @@ describe("detectFiles", () => {
 
   it("should handle empty directories gracefully", () => {
     const emptyDir = `${testDir}/empty`;
-    mkdirSync(emptyDir);
+    fs.mkdirSync(emptyDir);
 
     const props = {
       exclude: [],
@@ -55,7 +55,7 @@ describe("detectFiles", () => {
   });
 
   it("should not include files with unsupported extensions", () => {
-    writeFileSync(`${testDir}/file4.txt`, "");
+    fs.writeFileSync(`${testDir}/file4.txt`, "");
 
     const props = {
       exclude: [],
