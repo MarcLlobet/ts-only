@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Semantic git</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #232526 0%, #414345 100%);
+      color: #f4f4f4;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: rgba(34, 34, 34, 0.95);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      padding: 2.5rem 2rem;
+      max-width: 420px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+      color: #6ee7b7;
+    }
+    h2 {
+      font-size: 1.2rem;
+      font-weight: 400;
+      margin-bottom: 1.5rem;
+      color: #a7ffeb;
+    }
+    ul {
+      text-align: left;
+      margin: 1.5rem 0;
+      padding-left: 1.2rem;
+    }
+    li {
+      margin-bottom: 0.7rem;
+      font-size: 1rem;
+    }
+    code {
+      background: #2d3748;
+      color: #6ee7b7;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.95em;
+    }
+    .footer {
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      color: #bdbdbd;
+    }
+    a {
+      color: #6ee7b7;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    a:hover {
+      color: #34d399;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ts-only</h1>
+    <h2>TypeScript-only projects, zero JS allowed</h2>
+    <ul>
+      <li>🔹 <b>Detects</b> JavaScript files in your repo and blocks them</li>
+      <li>🔹 <b>Enforces</b> TypeScript-only codebase for better DX</li>
+      <li>🔹 <b>Integrates</b> with CI/CD and pre-commit hooks</li>
+      <li>🔹 <b>Fast</b> and easy to use, no config needed</li>
+    </ul>
+    <p>
+      <b>Quick usage:</b><br>
+      <code>npx ts-only</code>
+    </p>
+    <p>
+      <b>Install locally:</b><br>
+      <code>yarn add --dev ts-only</code>
+    </p>
+    <ul>
+      <li>Run <code>yarn lint</code>, <code>yarn tscheck</code>, <code>yarn test</code> and <code>yarn build</code> before every commit</li>
+      <li>Works out of the box with <b>Jest</b>, <b>ESLint</b>, <b>Prettier</b>, and <b>Husky</b></li>
+    </ul>
+    <div class="footer">
+      Made with 💚 by <a href="https://github.com/MarcLlobet/ts-only" target="_blank">ts-only</a>
+    </div>
+  </div>
+</body>
+</html>
