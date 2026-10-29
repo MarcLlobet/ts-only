@@ -2,18 +2,40 @@ import fs from "node:fs";
 import path from "node:path";
 import type { Config } from "./config.ts";
 
-const isExcluded = (fullPath: string, exclude: string[]): boolean => {
-  const normalized = path.normalize(fullPath);
-  const name = path.basename(normalized);
+export const isExcluded = (filePath: string, exclude: string[]): boolean => {
+  const normalized = path.normalize(filePath);
+  const segments = normalized.split(path.sep);
   return exclude.some((entry) => {
     const pattern = path.normalize(entry);
     return (
-      pattern === name ||
-      pattern === normalized ||
+      segments.includes(pattern) ||
+      normalized === pattern ||
       normalized.startsWith(`${pattern}${path.sep}`)
     );
   });
 };
+
+const isInside = (filePath: string, directory: string): boolean => {
+  const relative = path.relative(directory, filePath);
+  return (
+    relative !== "" && !relative.startsWith("..") && !path.isAbsolute(relative)
+  );
+};
+
+export const filterFiles = (
+  files: string[],
+  directory: string,
+  props: Config,
+): string[] =>
+  files
+    .map((file) => path.normalize(file))
+    .filter(
+      (file) =>
+        isInside(file, directory) &&
+        props.files.includes(path.extname(file)) &&
+        !isExcluded(file, props.exclude),
+    )
+    .sort();
 
 export const detectFiles = (directory: string, props: Config): string[] => {
   const jsFiles: string[] = [];

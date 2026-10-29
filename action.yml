@@ -11,14 +11,17 @@ inputs:
     description: Directory to scan, relative to the repository root.
     default: "."
   extensions:
-    description: Comma- or newline-separated extensions that count as JavaScript.
-    default: "js, jsx, mjs, cjs"
+    description: Comma- or newline-separated extensions that count as JavaScript. When empty, the config file's list or js, jsx, mjs, cjs.
+    default: ""
   exclude:
     description: Extra directories or paths to skip, added to node_modules, dist and .git.
     default: ""
   fail:
     description: Fail the step when JavaScript files are found. Set to false to only report them as warnings.
     default: "true"
+  scope:
+    description: Which files to check. "all" scans the repository; "changed" checks files added or modified by the pull request or push; "added" checks only new files, so existing JavaScript can stay while no new JavaScript gets in.
+    default: all
   commit-status:
     description: Also post a commit status (pending, then success or failure) linked to this run. Needs "statuses write" permission.
     default: "false"
@@ -26,7 +29,7 @@ inputs:
     description: Name of the commit status, as shown in the pull request and in branch protection.
     default: ts-only
   token:
-    description: Token used to post the commit status.
+    description: Token used to read the changed files and to post the commit status.
     default: ${{ github.token }}
 
 outputs:
@@ -34,6 +37,8 @@ outputs:
     description: Number of JavaScript files found.
   files:
     description: JSON array with the paths of the JavaScript files found.
+  scope:
+    description: The scope that was actually used. It is "all" when "changed" or "added" had no diff to compare (for example on workflow_dispatch).
 
 runs:
   using: node24

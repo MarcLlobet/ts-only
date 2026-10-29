@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { detectFiles } from "./detect-files.ts";
+import { detectFiles, filterFiles, isExcluded } from "./detect-files.ts";
 
 describe("detectFiles", () => {
   let testDir: string;
@@ -79,5 +79,41 @@ describe("detectFiles", () => {
       `${testDir}/file1.js`,
       `${testDir}/subdir/file3.js`,
     ]);
+  });
+});
+
+describe("filterFiles", () => {
+  const config = {
+    exclude: ["node_modules", "dist", "legacy/vendor"],
+    files: [".js", ".mjs"],
+  };
+
+  it("keeps JavaScript files inside the path that are not excluded", () => {
+    expect(
+      filterFiles(
+        [
+          "src/a.js",
+          "src/b.ts",
+          "packages/x/node_modules/y.js",
+          "legacy/vendor/z.js",
+          "legacy/c.mjs",
+        ],
+        ".",
+        config,
+      ),
+    ).toEqual(["legacy/c.mjs", "src/a.js"]);
+  });
+
+  it("only keeps files under the given path", () => {
+    expect(
+      filterFiles(["apps/web/a.js", "apps/api/b.js"], "apps/web", config),
+    ).toEqual(["apps/web/a.js"]);
+  });
+});
+
+describe("isExcluded", () => {
+  it("matches whole folder names, not prefixes", () => {
+    expect(isExcluded("src/distance.js", ["dist"])).toBe(false);
+    expect(isExcluded("packages/a/dist/b.js", ["dist"])).toBe(true);
   });
 });

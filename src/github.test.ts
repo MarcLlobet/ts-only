@@ -3,6 +3,8 @@ import os from "node:os";
 import path from "node:path";
 import {
   annotation,
+  getChangedFiles,
+  suggestion,
   parseList,
   readInputs,
   resolveSha,
@@ -24,6 +26,7 @@ describe("readInputs", () => {
       extensions: [],
       exclude: [],
       fail: true,
+      scope: "all",
       commitStatus: false,
       statusContext: "ts-only",
       token: "",
@@ -36,6 +39,7 @@ describe("readInputs", () => {
       INPUT_EXTENSIONS: "js, jsx",
       INPUT_EXCLUDE: "coverage\nstorybook-static",
       INPUT_FAIL: "false",
+      INPUT_SCOPE: "added",
       "INPUT_COMMIT-STATUS": "true",
       "INPUT_STATUS-CONTEXT": "typescript only",
       INPUT_TOKEN: "secret",
@@ -45,6 +49,7 @@ describe("readInputs", () => {
       extensions: ["js", "jsx"],
       exclude: ["coverage", "storybook-static"],
       fail: false,
+      scope: "added",
       commitStatus: true,
       statusContext: "typescript only",
       token: "secret",
@@ -52,10 +57,28 @@ describe("readInputs", () => {
   });
 });
 
+describe("readInputs scope", () => {
+  it("rejects an unknown scope", () => {
+    expect(() => readInputs({ INPUT_SCOPE: "new" })).toThrow(
+      '"scope" must be one of all, changed, added, got "new"',
+    );
+  });
+});
+
+describe("suggestion", () => {
+  it("suggests the matching TypeScript extension", () => {
+    expect(suggestion("src/app.jsx")).toBe(
+      'Rename it to app.tsx, or add it to "exclude" if it has to stay JavaScript.',
+    );
+    expect(suggestion("vite.config.mjs")).toContain("vite.config.mts");
+    expect(suggestion("legacy.cjs")).toContain("legacy.cts");
+  });
+});
+
 describe("annotation", () => {
-  it("is an error that points at the file", () => {
+  it("is an error that points at the file and suggests a fix", () => {
     expect(annotation("src/a.js", true)).toBe(
-      "::error file=src/a.js,title=JavaScript file::src/a.js is JavaScript. This repository only allows TypeScript.",
+      '::error file=src/a.js,title=JavaScript file::src/a.js is JavaScript. Rename it to a.ts, or add it to "exclude" if it has to stay JavaScript.',
     );
   });
 
@@ -77,7 +100,9 @@ describe("statusDescription", () => {
 describe("summary", () => {
   it("lists the files in a table", () => {
     const markdown = summary(["a.js"], [".js"]);
-    expect(markdown).toContain("1 JavaScript file found (checked .js)");
+    expect(markdown).toContain(
+      "1 JavaScript file found in the whole repository (checked .js)",
+    );
     expect(markdown).toContain("| `a.js` |");
   });
 });
@@ -92,7 +117,7 @@ describe("GitHub files", () => {
     fs.writeFileSync(output, "");
     writeOutputs({ GITHUB_OUTPUT: output }, ["a.js", "b.js"]);
     const content = fs.readFileSync(output, "utf8");
-    expect(content).toMatch(/^count=2\n/);
+    expect(content).toMatch(/^count=2\nscope=all\n/);
     expect(content).toContain('["a.js","b.js"]');
   });
 
@@ -109,5 +134,86 @@ describe("GitHub files", () => {
 
   it("falls back to GITHUB_SHA outside pull requests", () => {
     expect(resolveSha({ GITHUB_SHA: "push-sha" })).toBe("push-sha");
+  });
+});
+
+describe("getChangedFiles", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-only-event-"));
+  const eventPath = path.join(dir, "event.json");
+  const writeEvent = (event: object) =>
+    fs.writeFileSync(eventPath, JSON.stringify(event));
+  const env = {
+    GITHUB_EVENT_PATH: eventPath,
+    GITHUB_REPOSITORY: "owner/repo",
+    GITHUB_API_URL: "https://api.test",
+  };
+  const files = [
+    { filename: "src/new.js", status: "added" },
+    { filename: "src/old.js", status: "modified" },
+    { filename: "src/moved.js", status: "renamed" },
+    { filename: "src/gone.js", status: "removed" },
+  ];
+  const fetchMock = jest.fn();
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    global.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  const respond = (body: unknown) =>
+    fetchMock.mockResolvedValueOnce({ ok: true, json: async () => body });
+
+  it("reads the pull request files and keeps added ones", async () => {
+    writeEvent({ pull_request: { number: 7 } });
+    respond(files);
+    await expect(getChangedFiles(env, "token", "added")).resolves.toEqual([
+      "src/new.js",
+      "src/moved.js",
+    ]);
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "https://api.test/repos/owner/repo/pulls/7/files?per_page=100&page=1",
+    );
+  });
+
+  it("keeps modified files too with scope changed", async () => {
+    writeEvent({ pull_request: { number: 7 } });
+    respond(files);
+    await expect(getChangedFiles(env, "token", "changed")).resolves.toEqual([
+      "src/new.js",
+      "src/old.js",
+      "src/moved.js",
+    ]);
+  });
+
+  it("compares the pushed commits", async () => {
+    writeEvent({ before: "aaa", after: "bbb" });
+    respond({ files });
+    await getChangedFiles(env, "token", "added");
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "https://api.test/repos/owner/repo/compare/aaa...bbb",
+    );
+  });
+
+  it("compares a new branch with the default branch", async () => {
+    writeEvent({
+      before: "0000000000000000000000000000000000000000",
+      after: "bbb",
+      repository: { default_branch: "main" },
+    });
+    respond({ files });
+    await getChangedFiles(env, "token", "added");
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "https://api.test/repos/owner/repo/compare/main...bbb",
+    );
+  });
+
+  it("returns undefined when the event has no diff", async () => {
+    writeEvent({});
+    await expect(
+      getChangedFiles(env, "token", "added"),
+    ).resolves.toBeUndefined();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

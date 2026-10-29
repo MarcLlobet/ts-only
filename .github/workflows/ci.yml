@@ -64,6 +64,20 @@ jobs:
         with:
           path: fixtures/dirty
 
+      - name: Config file is read
+        run: |
+          echo '{ "exclude": ["fixtures/dirty/src"] }' > .ts-onlyrc.json
+
+      - name: Config file excludes a folder
+        id: rc
+        uses: ./
+        with:
+          path: fixtures/dirty
+          fail: false
+
+      - name: Remove config file
+        run: rm .ts-onlyrc.json
+
       - name: Custom extensions and excludes
         id: custom
         uses: ./
@@ -80,18 +94,21 @@ jobs:
           REPORT_FILES: ${{ steps.report.outputs.files }}
           STRICT: ${{ steps.strict.outcome }}
           CUSTOM: ${{ steps.custom.outputs.count }}
+          RC: ${{ steps.rc.outputs.count }}
         run: |
           test "$CLEAN" = "0"
           test "$REPORT" = "2"
           test "$REPORT_FILES" = '["fixtures/dirty/src/config.mjs","fixtures/dirty/src/legacy.js"]'
           test "$STRICT" = "failure"
           test "$CUSTOM" = "0"
+          test "$RC" = "0"
 
   dogfood:
     name: ts-only
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: read
       statuses: write
     steps:
       - uses: actions/checkout@v6
@@ -99,3 +116,17 @@ jobs:
       - uses: ./
         with:
           commit-status: true
+
+      - name: Only the files added by this push or pull request
+        id: added
+        uses: ./
+        with:
+          scope: added
+
+      - name: Check scope results
+        env:
+          SCOPE: ${{ steps.added.outputs.scope }}
+          COUNT: ${{ steps.added.outputs.count }}
+        run: |
+          test "$SCOPE" = "added"
+          test "$COUNT" = "0"

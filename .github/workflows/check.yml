@@ -8,13 +8,16 @@ on:
         default: "."
       extensions:
         type: string
-        default: "js, jsx, mjs, cjs"
+        default: ""
       exclude:
         type: string
         default: ""
       fail:
         type: boolean
         default: true
+      scope:
+        type: string
+        default: all
       commit-status:
         type: boolean
         default: false
@@ -26,6 +29,8 @@ on:
         value: ${{ jobs.ts-only.outputs.count }}
       files:
         value: ${{ jobs.ts-only.outputs.files }}
+      scope:
+        value: ${{ jobs.ts-only.outputs.scope }}
 
 jobs:
   ts-only:
@@ -34,6 +39,7 @@ jobs:
     outputs:
       count: ${{ steps.check.outputs.count }}
       files: ${{ steps.check.outputs.files }}
+      scope: ${{ steps.check.outputs.scope }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -46,5 +52,6 @@ jobs:
           extensions: ${{ inputs.extensions }}
           exclude: ${{ inputs.exclude }}
           fail: ${{ inputs.fail }}
+          scope: ${{ inputs.scope }}
           commit-status: ${{ inputs.commit-status }}
           status-context: ${{ inputs.status-context }}
