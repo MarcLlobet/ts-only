@@ -3,16 +3,21 @@ export interface Config {
   files: string[];
 }
 
-const defaultConfig: Config = {
-  exclude: ["node_modules", "dist"],
-  files: ["js", "jsx"],
-} as const;
+export interface ConfigOptions {
+  exclude?: string[];
+  extensions?: string[];
+}
 
-export const getConfig = (): Config => {
-  const {exclude, files: defaultFiles} = defaultConfig;
-  const files = defaultFiles.map((ext) => `.${ext}`)
-  return {
-    exclude,
-    files,
-  };
-};
+export const DEFAULT_EXCLUDE = ["node_modules", "dist", ".git"];
+export const DEFAULT_EXTENSIONS = ["js", "jsx", "mjs", "cjs"];
+
+const toExtension = (value: string): string =>
+  value.startsWith(".") ? value : `.${value}`;
+
+export const getConfig = (options: ConfigOptions = {}): Config => ({
+  exclude: [...new Set([...DEFAULT_EXCLUDE, ...(options.exclude ?? [])])],
+  files: (options.extensions?.length
+    ? options.extensions
+    : DEFAULT_EXTENSIONS
+  ).map(toExtension),
+});

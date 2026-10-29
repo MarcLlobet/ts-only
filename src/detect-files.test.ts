@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { detectFiles } from "./detect-files";
+import { detectFiles } from "./detect-files.ts";
 
 describe("detectFiles", () => {
   const testDir = "test-dir";
@@ -64,5 +64,20 @@ describe("detectFiles", () => {
     const result = detectFiles(testDir, props);
 
     expect(result).not.toContain(`${testDir}/file4.txt`);
+  });
+
+  it("skips excluded directory names at any depth", () => {
+    fs.mkdirSync(`${testDir}/subdir/node_modules/pkg`, { recursive: true });
+    fs.writeFileSync(`${testDir}/subdir/node_modules/pkg/index.js`, "");
+
+    const result = detectFiles(testDir, {
+      exclude: ["node_modules"],
+      files: [".js"],
+    });
+
+    expect(result).toEqual([
+      `${testDir}/file1.js`,
+      `${testDir}/subdir/file3.js`,
+    ]);
   });
 });

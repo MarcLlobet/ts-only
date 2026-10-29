@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Semantic git</title>
+  <title>ts-only</title>
   <style>
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -74,7 +74,7 @@
     <ul>
       <li>🔹 <b>Detects</b> JavaScript files in your repo and blocks them</li>
       <li>🔹 <b>Enforces</b> TypeScript-only codebase for better DX</li>
-      <li>🔹 <b>Integrates</b> with CI/CD and pre-commit hooks</li>
+      <li>🔹 <b>Checks</b> every pull request as a GitHub Action, with annotations on each JS file</li>
       <li>🔹 <b>Fast</b> and easy to use, no config needed</li>
     </ul>
     <p>
@@ -82,12 +82,16 @@
       <code>npx ts-only</code>
     </p>
     <p>
+      <b>As a GitHub check:</b><br>
+      <code>- uses: MarcLlobet/ts-only@v1</code>
+    </p>
+    <p>
       <b>Install locally:</b><br>
-      <code>yarn add --dev ts-only</code>
+      <code>npm install --save-dev ts-only</code>
     </p>
     <ul>
-      <li>Run <code>yarn lint</code>, <code>yarn tscheck</code>, <code>yarn test</code> and <code>yarn build</code> before every commit</li>
-      <li>Works out of the box with <b>Jest</b>, <b>ESLint</b>, <b>Prettier</b>, and <b>Husky</b></li>
+      <li>Add <code>npx ts-only</code> to your pre-commit hook or CI</li>
+      <li>Works out of the box with <b>Husky</b> and any CI</li>
     </ul>
     <div class="footer">
       Made with 💚 by <a href="https://github.com/MarcLlobet/ts-only" target="_blank">ts-only</a>

@@ -1,35 +1,73 @@
 {
   "name": "ts-only",
-  "version": "v1.0.0",
-  "description": "No js allowed!",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist/index.js"
+  "version": "1.1.0",
+  "description": "Keep a repository TypeScript-only: a CLI and GitHub Action that fail when JavaScript files appear.",
+  "keywords": [
+    "typescript",
+    "javascript",
+    "github-action",
+    "ci",
+    "lint",
+    "developer experience"
   ],
+  "homepage": "https://github.com/MarcLlobet/ts-only#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MarcLlobet/ts-only.git"
+  },
+  "license": "MIT",
+  "author": "Marc Llobet",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "bin": {
     "ts-only": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
   },
   "scripts": {
     "build": "rm -rf dist && tsc",
     "start": "node dist/cli.js",
     "test": "jest",
-    "dev": "ts-node src/cli.ts",
+    "dev": "node src/cli.ts",
     "lint": "eslint --config ./eslint.config.ts",
-    "tscheck": "tsc --project tsconfig.json",
+    "tscheck": "tsc --noEmit",
     "dependencies": "depcheck --ignore-pattern=dist",
     "prepare": "husky || true",
-    "precommit": "bash .husky/pre-commit"
+    "precommit": "bash .husky/pre-commit",
+    "ts-only": "node src/cli.ts"
   },
-  "keywords": [
-    "typescript",
-    "javascript",
-    "developer experience"
-  ],
-  "author": "Marc Llobet",
-  "license": "MIT",
   "publishConfig": {
     "access": "public"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/jest.setup.ts"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "json",
+      "node"
+    ],
+    "transform": {
+      "^.+\\.ts$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.test.json"
+        }
+      ]
+    }
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",

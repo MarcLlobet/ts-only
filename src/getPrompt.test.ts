@@ -1,4 +1,4 @@
-import { getPrompt } from "./getPrompt";
+import { getPrompt } from "./getPrompt.ts";
 import console from "node:console";
 
 describe("getPrompt", () => {

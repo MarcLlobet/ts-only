@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 import process from "node:process";
-import { getConfig } from "./config";
-import { detectFiles } from "./detect-files";
-import { getPrompt } from "./getPrompt";
+import { getConfig } from "./config.ts";
+import { detectFiles } from "./detect-files.ts";
+import { getPrompt } from "./getPrompt.ts";
 
-export type { Config } from "./config";
+export type { Config } from "./config.ts";
 
 export const tsOnly = (): void => {
   const props = getConfig();
