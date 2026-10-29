@@ -3,8 +3,17 @@
   "compilerOptions": {
     "module": "CommonJS",
     "moduleResolution": "Node",
-    "noEmit": true
+    "noEmit": true,
+    "rewriteRelativeImportExtensions": false,
+    "allowImportingTsExtensions": true
   },
-  "include": ["src", "globalTypes.d.ts", "jest.setup.ts"],
-  "exclude": ["dist", "node_modules"]
+  "include": [
+    "src",
+    "globalTypes.d.ts",
+    "jest.setup.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }
