@@ -42,10 +42,10 @@
     "dev": "node src/cli.ts",
     "lint": "eslint --config ./eslint.config.ts",
     "tscheck": "tsc --noEmit",
-    "dependencies": "depcheck --ignore-pattern=dist",
     "prepare": "husky || true",
     "precommit": "bash .husky/pre-commit",
-    "ts-only": "node src/cli.ts"
+    "ts-only": "node src/cli.ts",
+    "depcheck": "depcheck --ignore-patterns=dist --ignores=prettier,ts-node"
   },
   "publishConfig": {
     "access": "public"
