@@ -3,9 +3,9 @@
   "compilerOptions": {
     "module": "CommonJS",
     "moduleResolution": "Node",
-    "noEmit": true,
     "rewriteRelativeImportExtensions": false,
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "noEmitOnError": false
   },
   "include": [
     "src",
