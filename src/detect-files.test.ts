@@ -2,10 +2,10 @@ import fs from "node:fs";
 import { detectFiles } from "./detect-files.ts";
 
 describe("detectFiles", () => {
-  const testDir = "test-dir";
+  let testDir: string;
 
   beforeAll(() => {
-    fs.mkdirSync(testDir);
+    testDir = fs.mkdtempSync("detect-files-test-");
     fs.writeFileSync(`${testDir}/file1.js`, "");
     fs.writeFileSync(`${testDir}/file2.ts`, "");
     fs.mkdirSync(`${testDir}/subdir`);

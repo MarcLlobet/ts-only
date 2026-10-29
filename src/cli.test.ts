@@ -10,7 +10,7 @@ jest.mock("node:process", () => ({
   },
 }));
 
-const testDir = "test-dir";
+const testDir = "cli-test-dir";
 
 beforeAll(() => {
   fs.mkdirSync(testDir);
