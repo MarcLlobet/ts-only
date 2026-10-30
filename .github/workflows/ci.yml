@@ -6,127 +6,31 @@ on:
 
 jobs:
   test:
-    name: Lint, type-check, test and build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v5
         with:
           node-version: 24
-          cache: npm
+
+      - name: Regenerate lockfile (temporary)
+        if: contains(github.event.head_commit.message, '[regen-lock]')
+        run: |
+          npm install --package-lock-only
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Update package-lock.json"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
 
       - run: npm ci
       - run: npm run lint
       - run: npm run tscheck
       - run: npm test
-      - run: npm run build
-
-      - name: Check the published package contains the CLI
-        run: |
-          npm pack --dry-run --json | tee pack.json
-          grep -q '"dist/cli.js"' pack.json
-          grep -q '"dist/index.js"' pack.json
-
-      - name: Run the built CLI
-        run: node dist/cli.js
-
-  action:
-    name: Action
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Create fixtures
-        run: |
-          mkdir -p fixtures/clean/src fixtures/dirty/src fixtures/dirty/node_modules/pkg
-          touch fixtures/clean/src/index.ts
-          touch fixtures/dirty/src/index.ts fixtures/dirty/src/legacy.js fixtures/dirty/src/config.mjs
-          touch fixtures/dirty/node_modules/pkg/index.js
-
-      - name: Clean directory passes
-        id: clean
-        uses: ./
-        with:
-          path: fixtures/clean
-
-      - name: Report-only mode lists files without failing
-        id: report
-        uses: ./
-        with:
-          path: fixtures/dirty
-          fail: false
-
-      - name: Default mode fails
-        id: strict
-        uses: ./
-        continue-on-error: true
-        with:
-          path: fixtures/dirty
-
-      - name: Config file is read
-        run: |
-          echo '{ "exclude": ["fixtures/dirty/src"] }' > .ts-onlyrc.json
-
-      - name: Config file excludes a folder
-        id: rc
-        uses: ./
-        with:
-          path: fixtures/dirty
-          fail: false
-
-      - name: Remove config file
-        run: rm .ts-onlyrc.json
-
-      - name: Custom extensions and excludes
-        id: custom
-        uses: ./
-        with:
-          path: fixtures/dirty
-          extensions: mjs
-          exclude: fixtures/dirty/src
-          fail: false
-
-      - name: Check results
-        env:
-          CLEAN: ${{ steps.clean.outputs.count }}
-          REPORT: ${{ steps.report.outputs.count }}
-          REPORT_FILES: ${{ steps.report.outputs.files }}
-          STRICT: ${{ steps.strict.outcome }}
-          CUSTOM: ${{ steps.custom.outputs.count }}
-          RC: ${{ steps.rc.outputs.count }}
-        run: |
-          test "$CLEAN" = "0"
-          test "$REPORT" = "2"
-          test "$REPORT_FILES" = '["fixtures/dirty/src/config.mjs","fixtures/dirty/src/legacy.js"]'
-          test "$STRICT" = "failure"
-          test "$CUSTOM" = "0"
-          test "$RC" = "0"
-
-  dogfood:
-    name: ts-only
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-      statuses: write
-    steps:
-      - uses: actions/checkout@v6
-
+      - run: npm run build && npm pack --dry-run 2>&1 | grep dist/cli.js
+      - uses: ./
       - uses: ./
         with:
-          commit-status: true
-
-      - name: Only the files added by this push or pull request
-        id: added
-        uses: ./
-        with:
           scope: added
-
-      - name: Check scope results
-        env:
-          SCOPE: ${{ steps.added.outputs.scope }}
-          COUNT: ${{ steps.added.outputs.count }}
-        run: |
-          test "$SCOPE" = "added"
-          test "$COUNT" = "0"

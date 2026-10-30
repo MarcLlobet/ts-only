@@ -4,17 +4,14 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "./dist",
-    "declaration": true,
-    "declarationDir": "./dist/types",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
     "noEmitOnError": true,
-    "sourceMap": true,
     "rewriteRelativeImportExtensions": true,
     "erasableSyntaxOnly": true,
-    "types": ["node", "jest"]
+    "types": ["node"]
   },
   "include": ["src", "globalTypes.d.ts"],
   "exclude": ["dist", "node_modules", "src/**/*.test.ts"]

@@ -6,9 +6,7 @@
     "typescript",
     "javascript",
     "github-action",
-    "ci",
-    "lint",
-    "developer experience"
+    "ci"
   ],
   "homepage": "https://github.com/MarcLlobet/ts-only#readme",
   "repository": {
@@ -18,14 +16,6 @@
   "license": "MIT",
   "author": "Marc Llobet",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/types/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/types/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  },
   "bin": {
     "ts-only": "dist/cli.js"
   },
@@ -37,59 +27,23 @@
   },
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "start": "node dist/cli.js",
-    "test": "jest",
-    "dev": "node src/cli.ts",
+    "test": "node --test \"src/*.test.ts\" \"scripts/*.test.ts\"",
     "lint": "eslint --config ./eslint.config.ts",
     "tscheck": "tsc --noEmit",
-    "prepare": "husky || true",
-    "precommit": "bash .husky/pre-commit",
     "ts-only": "node src/cli.ts",
-    "depcheck": "depcheck --ignore-patterns=dist --ignores=prettier,ts-node"
+    "prepare": "husky || true"
   },
   "publishConfig": {
     "access": "public"
   },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/jest.setup.ts"
-    ],
-    "moduleFileExtensions": [
-      "ts",
-      "js",
-      "json",
-      "node"
-    ],
-    "transform": {
-      "^.+\\.ts$": [
-        "ts-jest",
-        {
-          "tsconfig": "tsconfig.test.json",
-          "diagnostics": {
-            "ignoreCodes": [
-              5096,
-              5097
-            ]
-          }
-        }
-      ]
-    }
-  },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
-    "@jest/globals": "^29.7.0",
-    "@types/jest": "^29.0.0",
     "@types/node": "^22.15.21",
-    "depcheck": "^1.4.7",
     "eslint": "^9.27.0",
     "eslint-config-prettier": "^10.1.5",
     "husky": "^9.1.7",
-    "jest": "^29.0.0",
     "jiti": "^2.4.2",
     "prettier": "^3.5.3",
-    "ts-jest": "^29.3.4",
-    "ts-node": "^10.9.2",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.32.1"
   },

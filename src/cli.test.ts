@@ -1,36 +1,18 @@
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
-const mockExitCode = jest.fn();
+import os from "node:os";
+import path from "node:path";
+import { test } from "node:test";
+import { fileURLToPath } from "node:url";
 
-jest.mock("node:process", () => ({
-  __esModule: true,
-  default: {
-    set exitCode(x: number) {
-      mockExitCode(x);
-    },
-  },
-}));
+const cli = fileURLToPath(new URL("./cli.ts", import.meta.url));
 
-const testDir = "cli-test-dir";
+test("the CLI exits with 1 only when JavaScript files exist", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-only-"));
+  fs.writeFileSync(path.join(dir, "a.ts"), "");
+  assert.equal(spawnSync("node", [cli], { cwd: dir }).status, 0);
 
-beforeAll(() => {
-  fs.mkdirSync(testDir);
-  fs.writeFileSync(`${testDir}/file1.js`, "");
-  fs.writeFileSync(`${testDir}/file2.ts`, "");
-  fs.mkdirSync(`${testDir}/subdir`);
-  fs.writeFileSync(`${testDir}/subdir/file3.js`, "");
-});
-
-afterAll(() => {
-  fs.rmSync(testDir, { recursive: true, force: true });
-});
-
-describe("tsOnly", () => {
-  it("runs as an iife", () => {
-    const process = require("node:process").default;
-
-    require("./cli.ts");
-
-    process.exitCode = 99;
-    expect(mockExitCode).toHaveBeenCalledWith(99);
-  });
+  fs.writeFileSync(path.join(dir, "b.js"), "");
+  assert.equal(spawnSync("node", [cli], { cwd: dir }).status, 1);
 });

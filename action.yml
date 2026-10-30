@@ -1,44 +1,33 @@
 name: ts-only
 description: Fail the check when JavaScript files appear in a TypeScript-only repository.
 author: Marc Llobet
-
 branding:
   icon: shield
   color: blue
 
 inputs:
   path:
-    description: Directory to scan, relative to the repository root.
+    description: Directory to check.
     default: "."
   extensions:
-    description: Comma- or newline-separated extensions that count as JavaScript. When empty, the config file's list or js, jsx, mjs, cjs.
-    default: ""
+    description: Extensions that count as JavaScript (default js, jsx, mjs, cjs).
   exclude:
-    description: Extra directories or paths to skip, added to node_modules, dist and .git.
-    default: ""
+    description: Extra folders or paths to skip, besides node_modules, dist and .git.
   fail:
-    description: Fail the step when JavaScript files are found. Set to false to only report them as warnings.
+    description: Set to false to report JavaScript files as warnings without failing.
     default: "true"
   scope:
-    description: Which files to check. "all" scans the repository; "changed" checks files added or modified by the pull request or push; "added" checks only new files, so existing JavaScript can stay while no new JavaScript gets in.
+    description: all, changed (files added or modified by the PR or push) or added (only new files).
     default: all
-  commit-status:
-    description: Also post a commit status (pending, then success or failure) linked to this run. Needs "statuses write" permission.
-    default: "false"
-  status-context:
-    description: Name of the commit status, as shown in the pull request and in branch protection.
-    default: ts-only
   token:
-    description: Token used to read the changed files and to post the commit status.
+    description: Token used to read the changed files.
     default: ${{ github.token }}
 
 outputs:
   count:
     description: Number of JavaScript files found.
   files:
-    description: JSON array with the paths of the JavaScript files found.
-  scope:
-    description: The scope that was actually used. It is "all" when "changed" or "added" had no diff to compare (for example on workflow_dispatch).
+    description: JSON array with their paths.
 
 runs:
   using: node24
