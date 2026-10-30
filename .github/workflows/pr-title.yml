@@ -1,0 +1,22 @@
+name: PR title
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  release-prefix:
+    name: Release prefix
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Title starts with patch, minor or major
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [[ "$TITLE" =~ ^(patch|minor|major):\ .+ ]]; then
+            echo "Merging this pull request releases a **${BASH_REMATCH[1]}** version." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error title=PR title::Start the title with \"patch: \", \"minor: \" or \"major: \". It becomes the release note."
+            exit 1
+          fi

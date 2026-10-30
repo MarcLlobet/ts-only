@@ -225,9 +225,22 @@ The CI workflow also runs the Action against fixtures and on this repository, po
 
 ### Releasing
 
-Push a version tag, for example `v1.1.0`. The **Release** workflow:
+Releases are automatic. Nobody pushes tags or edits the changelog by hand:
 
-- publishes the package to npm;
-- moves the major tag (`v1`) to the new release, so `MarcLlobet/ts-only@v1` users get the update.
+1. **Start the pull request title with the kind of release it needs:**
+   - `patch: Fix nested node_modules being scanned`, for fixes;
+   - `minor: Add a scope input`, for new features;
+   - `major: Drop Node 18 support`, for breaking changes.
 
-To list it on the GitHub Marketplace, create a GitHub release from the tag and tick **Publish this Action to the GitHub Marketplace**.
+   The **PR title** check fails until the title has one of these prefixes. With squash merging, the title becomes the commit on `main`, and the rest of the title becomes the release note.
+
+2. **Merge it.** The **Release** workflow then:
+   - reads the `patch:`, `minor:` and `major:` commits since the last tag and applies the biggest bump (`v1.1.0` + a `minor:` → `v1.2.0`);
+   - writes the release notes, grouped into breaking changes, features and fixes, with a link to each pull request;
+   - adds the same notes to the top of [`CHANGELOG.md`](CHANGELOG.md) and updates the version in `package.json`, in a `release: vX.Y.Z` commit;
+   - tags `vX.Y.Z`, moves the major tag (`v1`) so `MarcLlobet/ts-only@v1` users get the update, and creates the GitHub release;
+   - publishes the package to npm.
+
+Commits without a prefix, such as Dependabot updates or a quick direct push, don't release anything. They ship with the next prefixed change.
+
+To list a release on the GitHub Marketplace, edit it on GitHub and tick **Publish this Action to the GitHub Marketplace**.
