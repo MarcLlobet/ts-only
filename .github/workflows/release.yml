@@ -36,5 +36,5 @@ jobs:
           git tag "$TAG" && git tag -f "$MAJOR"
           git push origin HEAD:main "$TAG" && git push -f origin "$MAJOR"
           gh release create "$TAG" --title "$TAG" --notes-file release-notes.md
-          npm install -g npm@^11.15.0
-          npm ci && npm run build && npm stage publish
+          npm install -g npm@^11.5.1
+          npm ci && npm run build && npm publish
