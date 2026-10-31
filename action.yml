@@ -7,19 +7,8 @@ branding:
 
 inputs:
   path:
-    description: Directory to check.
+    description: Folder or file to check. Files listed in .tsonlyignore are skipped.
     default: "."
-  exclude:
-    description: Folders or files to skip, separated by commas or new lines. Files ignored by .gitignore are always skipped.
-  fail:
-    description: Set to false to report JavaScript files as warnings without failing.
-    default: "true"
-  scope:
-    description: all, changed (files added or modified by the PR or push) or added (only new files).
-    default: all
-  token:
-    description: Token used to read the changed files.
-    default: ${{ github.token }}
 
 outputs:
   count:

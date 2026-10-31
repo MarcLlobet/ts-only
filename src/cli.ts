@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 
 import process from "node:process";
-import { loadExclude, suggestion } from "./config.ts";
-import { detectFiles } from "./detect-files.ts";
+import { findJavaScript, suggestion } from "./ts-only.ts";
 
 try {
-  const files = detectFiles(".", loadExclude("."));
+  const files = findJavaScript(process.argv[2]);
   if (files.length) {
     console.error(
       `🚨 ${files.length} JavaScript file${files.length === 1 ? "" : "s"} found:`,
