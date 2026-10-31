@@ -13,9 +13,13 @@ const HEADINGS = {
 };
 
 export const parseLog = (log: string, repo: string): Change[] =>
-  log.split("\n").flatMap((entry) => {
-    const [sha, subject = ""] = entry.split("\t");
-    const match = subject.match(
+  log.split("\x1e").flatMap((entry) => {
+    const [sha = "", subject = "", body = ""] = entry.trim().split("\x1f");
+    const merge = subject.match(/^Merge pull request #(\d+)/);
+    const message = merge
+      ? `${body.trim().split("\n")[0]} (#${merge[1]})`
+      : subject;
+    const match = message.match(
       /^(patch|minor|major):\s*(.+?)(?:\s*\(#(\d+)\))?$/i,
     );
     if (!match) return [];
@@ -57,7 +61,14 @@ if (process.argv[1]?.endsWith("release.ts")) {
   );
   const repo = process.env.GITHUB_REPOSITORY ?? "MarcLlobet/ts-only";
   const changes = parseLog(
-    sh("git", "log", "--reverse", "--format=%H%x09%s", `${tag}..HEAD`),
+    sh(
+      "git",
+      "log",
+      "--first-parent",
+      "--reverse",
+      "--format=%H%x1f%s%x1f%b%x1e",
+      `${tag}..HEAD`,
+    ),
     repo,
   );
   const bump = BUMPS.find((b) => changes.some((change) => change.bump === b));
