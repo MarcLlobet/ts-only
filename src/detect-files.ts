@@ -1,6 +1,7 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import type { Config } from "./config.ts";
+import { EXTENSIONS } from "./config.ts";
 
 export const isExcluded = (file: string, exclude: string[]): boolean => {
   const normalized = path.normalize(file);
@@ -14,30 +15,43 @@ export const isExcluded = (file: string, exclude: string[]): boolean => {
   });
 };
 
-const isJavaScript = (file: string, props: Config): boolean =>
-  props.files.includes(path.extname(file)) && !isExcluded(file, props.exclude);
-
 export const filterFiles = (
   files: string[],
   directory: string,
-  props: Config,
+  exclude: string[],
 ): string[] =>
   files
     .map((file) => path.normalize(file))
     .filter(
       (file) =>
         !path.relative(directory, file).startsWith("..") &&
-        isJavaScript(file, props),
+        EXTENSIONS.includes(path.extname(file)) &&
+        !isExcluded(file, exclude),
     )
     .sort();
 
-export const detectFiles = (directory: string, props: Config): string[] =>
-  fs
-    .readdirSync(directory, { withFileTypes: true })
-    .flatMap((entry) => {
-      const fullPath = path.join(directory, entry.name);
-      if (isExcluded(fullPath, props.exclude)) return [];
-      if (entry.isDirectory()) return detectFiles(fullPath, props);
-      return entry.isFile() && isJavaScript(fullPath, props) ? [fullPath] : [];
-    })
-    .sort();
+const listFiles = (directory: string): string[] => {
+  try {
+    return execFileSync(
+      "git",
+      [
+        "-C",
+        directory,
+        "ls-files",
+        "-z",
+        "--cached",
+        "--others",
+        "--exclude-standard",
+      ],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+    )
+      .split("\0")
+      .map((file) => path.join(directory, file))
+      .filter((file) => file !== directory && fs.existsSync(file));
+  } catch {
+    throw new Error(`${directory} is not inside a git repository`);
+  }
+};
+
+export const detectFiles = (directory: string, exclude: string[]): string[] =>
+  filterFiles(listFiles(directory), directory, exclude);

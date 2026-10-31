@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import path from "node:path";
+import { suggestion } from "./config.ts";
 
 export type Scope = "all" | "changed" | "added";
 type Env = Record<string, string | undefined>;
@@ -16,27 +16,11 @@ const list = (value: string): string[] =>
 
 export const readInputs = (env: Env) => ({
   path: input(env, "path", "."),
-  extensions: list(input(env, "extensions")),
   exclude: list(input(env, "exclude")),
   fail: input(env, "fail", "true") !== "false",
   scope: input(env, "scope", "all") as Scope,
   token: input(env, "token"),
 });
-
-const TS_EXTENSION: Record<string, string> = {
-  ".js": ".ts",
-  ".jsx": ".tsx",
-  ".mjs": ".mts",
-  ".cjs": ".cts",
-};
-
-export const suggestion = (file: string): string => {
-  const ext = path.extname(file);
-  const rename = TS_EXTENSION[ext]
-    ? `Rename it to ${path.basename(file, ext)}${TS_EXTENSION[ext]}`
-    : "Convert it to TypeScript";
-  return `${rename}, or add it to "exclude" if it has to stay JavaScript.`;
-};
 
 export const annotation = (file: string, fail: boolean): string =>
   `::${fail ? "error" : "warning"} file=${file.replace(/[%,:]/g, encodeURIComponent)},title=JavaScript file::${file} is JavaScript. ${suggestion(file)}`;

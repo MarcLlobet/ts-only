@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import process from "node:process";
-import { getConfig, loadConfigFile } from "./config.ts";
+import { loadExclude } from "./config.ts";
 import { detectFiles, filterFiles } from "./detect-files.ts";
 import { annotation, getChangedFiles, readInputs, summary } from "./github.ts";
 
@@ -12,7 +12,7 @@ try {
     throw new Error(`"scope" must be all, changed or added`);
   }
 
-  const config = getConfig(inputs, loadConfigFile("."));
+  const exclude = [...loadExclude("."), ...inputs.exclude];
   const changed =
     inputs.scope === "all"
       ? undefined
@@ -24,8 +24,8 @@ try {
   }
 
   const files = changed
-    ? filterFiles(changed, inputs.path, config)
-    : detectFiles(inputs.path, config);
+    ? filterFiles(changed, inputs.path, exclude)
+    : detectFiles(inputs.path, exclude);
 
   files.forEach((file) => console.log(annotation(file, inputs.fail)));
   if (env.GITHUB_OUTPUT) {
