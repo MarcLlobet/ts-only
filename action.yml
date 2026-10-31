@@ -1,0 +1,34 @@
+name: ts-only
+description: Fail the check when JavaScript files appear in a TypeScript-only repository.
+author: Marc Llobet
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  path:
+    description: Directory to check.
+    default: "."
+  extensions:
+    description: Extensions that count as JavaScript (default js, jsx, mjs, cjs).
+  exclude:
+    description: Extra folders or paths to skip, besides node_modules, dist and .git.
+  fail:
+    description: Set to false to report JavaScript files as warnings without failing.
+    default: "true"
+  scope:
+    description: all, changed (files added or modified by the PR or push) or added (only new files).
+    default: all
+  token:
+    description: Token used to read the changed files.
+    default: ${{ github.token }}
+
+outputs:
+  count:
+    description: Number of JavaScript files found.
+  files:
+    description: JSON array with their paths.
+
+runs:
+  using: node24
+  main: src/action.ts

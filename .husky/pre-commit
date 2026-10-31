@@ -1,4 +1,5 @@
-yarn lint
-yarn tscheck
-yarn test
-yarn build
+npm run lint
+npm run tscheck
+npm test
+npm run build
+npm run ts-only

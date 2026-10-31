@@ -1,18 +1,42 @@
+import fs from "node:fs";
+import path from "node:path";
+
 export interface Config {
   exclude: string[];
   files: string[];
 }
 
-const defaultConfig: Config = {
-  exclude: ["node_modules", "dist"],
-  files: ["js", "jsx"],
-} as const;
+export interface ConfigOptions {
+  exclude?: string[];
+  extensions?: string[];
+}
 
-export const getConfig = (): Config => {
-  const {exclude, files: defaultFiles} = defaultConfig;
-  const files = defaultFiles.map((ext) => `.${ext}`)
-  return {
-    exclude,
-    files,
-  };
-};
+const DEFAULT_EXCLUDE = ["node_modules", "dist", ".git"];
+const DEFAULT_EXTENSIONS = ["js", "jsx", "mjs", "cjs"];
+
+const readJson = (file: string) =>
+  fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : undefined;
+
+export const loadConfigFile = (directory = "."): ConfigOptions =>
+  readJson(path.join(directory, ".ts-onlyrc.json")) ??
+  readJson(path.join(directory, "package.json"))?.["ts-only"] ??
+  {};
+
+export const getConfig = (
+  options: ConfigOptions = {},
+  file: ConfigOptions = {},
+): Config => ({
+  exclude: [
+    ...new Set([
+      ...DEFAULT_EXCLUDE,
+      ...(file.exclude ?? []),
+      ...(options.exclude ?? []),
+    ]),
+  ],
+  files: (options.extensions?.length
+    ? options.extensions
+    : file.extensions?.length
+      ? file.extensions
+      : DEFAULT_EXTENSIONS
+  ).map((ext) => (ext.startsWith(".") ? ext : `.${ext}`)),
+});

@@ -2,84 +2,69 @@
 
 **TypeScript-only projects, zero JS allowed!**
 
-A friendly CLI tool to enforce a TypeScript-only codebase. Instantly detect and block JavaScript files in your project, so you and your team can focus on modern, type-safe development.
+ts-only fails when JavaScript files (`.js`, `.jsx`, `.mjs`, `.cjs`) appear in a TypeScript-only repository. Use it as a GitHub Action or as a CLI. It has no dependencies and runs its TypeScript directly on Node 24.
 
----
+## GitHub Action
 
-## 🚀 Purpose
+```yaml
+jobs:
+  ts-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: MarcLlobet/ts-only@v1
+```
 
-- **Guarantee** that your repository contains only TypeScript files—no stray JavaScript!
-- **Improve developer experience** by keeping your codebase clean and consistent.
-- **Integrate easily** with CI/CD, pre-commit hooks, and your favorite dev tools.
+Each JavaScript file gets an annotation on the pull request with the fix ("Rename it to `app.tsx`"), and the job summary lists them all. To block merges, add the `ts-only` job as a required status check in **Settings → Rules → Rulesets**.
 
----
+| Input        | Default             | Description                                                                         |
+| ------------ | ------------------- | ----------------------------------------------------------------------------------- |
+| `path`       | `.`                 | Directory to check.                                                                 |
+| `extensions` | `js, jsx, mjs, cjs` | Extensions that count as JavaScript.                                                |
+| `exclude`    |                     | Extra folders or paths to skip, besides `node_modules`, `dist` and `.git`.          |
+| `fail`       | `true`              | `false` reports the files as warnings without failing.                              |
+| `scope`      | `all`               | `all`, `changed` (added or modified by the PR or push) or `added` (new files only). |
 
-## ✨ Features
+Outputs: `count` and `files` (a JSON array).
 
-- 🔹 **Detects** JavaScript files anywhere in your repo
-- 🔹 **Blocks** commits/builds if JS files are found
-- 🔹 **Zero config**: works out of the box
-- 🔹 **Fast** and lightweight
-- 🔹 **Integrates** with Jest, ESLint, Prettier, Husky, and more
+### Migrating a JavaScript codebase
 
----
+Use `scope: added` to stop new JavaScript files from day one while existing ones stay. Switch to `scope: all` once they're converted. `changed` and `added` read the diff from the GitHub API, so on pull requests the job needs `pull-requests: read`. On events without a diff, such as `workflow_dispatch`, ts-only checks every file.
 
-## 🛠️ Installation & Usage
-
-**Quick check (no install):**
+## CLI
 
 ```sh
 npx ts-only
 ```
 
-**Add to your project:**
+It exits with 1 when JavaScript files are found. Run it in a pre-commit hook to catch them before CI.
 
-```sh
-yarn add --dev ts-only
+## Config file
+
+The Action and the CLI read the same config, from `.ts-onlyrc.json` or a `"ts-only"` key in `package.json`:
+
+```json
+{ "exclude": ["scripts/legacy"], "extensions": ["js", "jsx"] }
 ```
 
-**Run manually:**
+Action inputs add to `exclude` and replace `extensions`.
+
+## Development
 
 ```sh
-yarn ts-only
+npm install
+npm test        # node --test
+npm run lint
+npm run tscheck
 ```
 
-**Recommended: Add to pre-commit hook**
+### Releasing
 
-If you use Husky, add this to your `.husky/pre-commit`:
+Releases are automatic. Start the pull request title with `patch:`, `minor:` or `major:`; a check enforces it. When the pull request is squash-merged into `main`, the Release workflow:
 
-```sh
-yarn lint
-yarn tscheck
-yarn test
-yarn build
-yarn ts-only
-```
+- bumps the version from the prefixed commits since the last tag;
+- adds the release notes to the top of [`CHANGELOG.md`](CHANGELOG.md);
+- tags `vX.Y.Z`, moves `v1` and creates the GitHub release;
+- publishes to npm.
 
----
-
-## ⚙️ How it works
-
-- Scans your project for `.js` and `.jsx` files (configurable)
-- Excludes `node_modules`, `dist`, and other common folders by default
-- Fails with a clear error if any JS files are found
-- Returns exit code 1 if JS files exist, 0 if all clear
-
----
-
-## 📦 Scripts & Integrations
-
-- `yarn lint` — Lint your code with ESLint
-- `yarn tscheck` — Type-check with TypeScript
-- `yarn test` — Run tests with Jest
-- `yarn build` — Compile your project
-- `yarn ts-only` — Block JS files!
-
----
-
-## 🧑‍💻 Technical details
-
-- Written in TypeScript
-- CLI entry: `src/cli.ts`
-- Uses Node.js `fs` and `path` modules for fast file detection
-- Easily extendable for custom file types or exclusions
+Commits without a prefix don't release anything.

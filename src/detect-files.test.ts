@@ -1,68 +1,40 @@
+import assert from "node:assert/strict";
 import fs from "node:fs";
-import { detectFiles } from "./detect-files";
+import os from "node:os";
+import path from "node:path";
+import { test } from "node:test";
+import { getConfig } from "./config.ts";
+import { detectFiles, filterFiles } from "./detect-files.ts";
 
-describe("detectFiles", () => {
-  const testDir = "test-dir";
+const config = getConfig({ exclude: ["legacy"] });
 
-  beforeAll(() => {
-    fs.mkdirSync(testDir);
-    fs.writeFileSync(`${testDir}/file1.js`, "");
-    fs.writeFileSync(`${testDir}/file2.ts`, "");
-    fs.mkdirSync(`${testDir}/subdir`);
-    fs.writeFileSync(`${testDir}/subdir/file3.js`, "");
-  });
+test("detectFiles finds JavaScript and skips excluded folders at any depth", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-only-"));
+  for (const file of [
+    "a.js",
+    "b.ts",
+    "src/c.mjs",
+    "src/node_modules/d.js",
+    "legacy/e.js",
+    "src/distance.js",
+  ]) {
+    fs.mkdirSync(path.dirname(path.join(dir, file)), { recursive: true });
+    fs.writeFileSync(path.join(dir, file), "");
+  }
 
-  afterAll(() => {
-    fs.rmSync(testDir, { recursive: true, force: true });
-  });
+  assert.deepEqual(
+    detectFiles(dir, config).map((file) => path.relative(dir, file)),
+    ["a.js", "src/c.mjs", "src/distance.js"],
+  );
+});
 
-  it("should detect files with allowed extensions", () => {
-    const props = {
-      exclude: [],
-      files: [".js"],
-    };
-    const result = detectFiles(testDir, props);
-
-    expect(result).toEqual(
-      expect.arrayContaining([
-        `${testDir}/file1.js`,
-        `${testDir}/subdir/file3.js`,
-      ]),
-    );
-  });
-
-  it("should exclude directories listed in the exclude array", () => {
-    const props = {
-      exclude: [`${testDir}/subdir`],
-      files: [".js"],
-    };
-    const result = detectFiles(testDir, props);
-
-    expect(result).toEqual([`${testDir}/file1.js`]);
-  });
-
-  it("should handle empty directories gracefully", () => {
-    const emptyDir = `${testDir}/empty`;
-    fs.mkdirSync(emptyDir);
-
-    const props = {
-      exclude: [],
-      files: [".js"],
-    };
-    const result = detectFiles(emptyDir, props);
-
-    expect(result).toEqual([]);
-  });
-
-  it("should not include files with unsupported extensions", () => {
-    fs.writeFileSync(`${testDir}/file4.txt`, "");
-
-    const props = {
-      exclude: [],
-      files: [".js"],
-    };
-    const result = detectFiles(testDir, props);
-
-    expect(result).not.toContain(`${testDir}/file4.txt`);
-  });
+test("filterFiles keeps JavaScript inside the path that is not excluded", () => {
+  assert.deepEqual(
+    filterFiles(
+      ["web/a.js", "web/b.ts", "web/node_modules/c.js", "api/d.js"],
+      "web",
+      config,
+    ),
+    ["web/a.js"],
+  );
 });

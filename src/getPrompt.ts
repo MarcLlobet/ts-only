@@ -1,4 +1,4 @@
-import type { Config } from "./config";
+import type { Config } from "./config.ts";
 import console from "node:console";
 
 export const getPrompt = (files: string[], props: Config): void => {
