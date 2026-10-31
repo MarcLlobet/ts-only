@@ -2,69 +2,143 @@
 
 **TypeScript-only projects, zero JS allowed!**
 
-ts-only fails when JavaScript files (`.js`, `.jsx`, `.mjs`, `.cjs`) appear in a TypeScript-only repository. Use it as a GitHub Action or as a CLI. It has no dependencies and runs its TypeScript directly on Node 24.
+ts-only fails when a JavaScript file (`.js`, `.jsx`, `.mjs`, `.cjs`) appears in your repository, and tells you how to fix it:
 
-## GitHub Action
+```
+$ npx ts-only
+🚨 2 JavaScript files found:
+  src/legacy.js: Rename it to legacy.ts, or add it to "exclude" if it has to stay JavaScript.
+  vite.config.mjs: Rename it to vite.config.mts, or add it to "exclude" if it has to stay JavaScript.
+```
+
+It checks the files git knows about, so anything in your `.gitignore` (`node_modules`, build output…) is skipped without any configuration.
+
+## In GitHub Actions
+
+Add `.github/workflows/ts-only.yml`:
+
+```yaml
+name: ts-only
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ts-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: MarcLlobet/ts-only@v1
+```
+
+Each JavaScript file gets an annotation on the pull request with the fix, and the job summary lists them all. To block merges, add `ts-only` as a required status check in **Settings → Rules → Rulesets**.
+
+### Examples
+
+**Block only new JavaScript** in a codebase that still has some. Existing files can stay, but pull requests can't add more:
 
 ```yaml
 jobs:
   ts-only:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: MarcLlobet/ts-only@v1
+        with:
+          scope: added
 ```
 
-Each JavaScript file gets an annotation on the pull request with the fix ("Rename it to `app.tsx`"), and the job summary lists them all. To block merges, add the `ts-only` job as a required status check in **Settings → Rules → Rulesets**.
+**One package of a monorepo**, skipping a folder that has to stay JavaScript:
 
-| Input        | Default             | Description                                                                         |
-| ------------ | ------------------- | ----------------------------------------------------------------------------------- |
-| `path`       | `.`                 | Directory to check.                                                                 |
-| `extensions` | `js, jsx, mjs, cjs` | Extensions that count as JavaScript.                                                |
-| `exclude`    |                     | Extra folders or paths to skip, besides `node_modules`, `dist` and `.git`.          |
-| `fail`       | `true`              | `false` reports the files as warnings without failing.                              |
-| `scope`      | `all`               | `all`, `changed` (added or modified by the PR or push) or `added` (new files only). |
+```yaml
+- uses: MarcLlobet/ts-only@v1
+  with:
+    path: packages/web
+    exclude: packages/web/public/vendor
+```
 
-Outputs: `count` and `files` (a JSON array).
+**Report without failing**, and use the result in a later step:
 
-### Migrating a JavaScript codebase
+```yaml
+- id: ts-only
+  uses: MarcLlobet/ts-only@v1
+  with:
+    fail: false
+- if: steps.ts-only.outputs.count != '0'
+  run: echo "JavaScript left to convert: ${{ steps.ts-only.outputs.files }}"
+```
 
-Use `scope: added` to stop new JavaScript files from day one while existing ones stay. Switch to `scope: all` once they're converted. `changed` and `added` read the diff from the GitHub API, so on pull requests the job needs `pull-requests: read`. On events without a diff, such as `workflow_dispatch`, ts-only checks every file.
+### Inputs and outputs
 
-## CLI
+| Input     | Default | Description                                                                                    |
+| --------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `path`    | `.`     | Directory to check.                                                                            |
+| `exclude` |         | Folders or files to skip, separated by commas or new lines.                                    |
+| `fail`    | `true`  | `false` reports JavaScript files as warnings without failing.                                  |
+| `scope`   | `all`   | `all` files, `changed` (added or modified by the pull request or push), or `added` (new only). |
+
+| Output  | Description                               |
+| ------- | ----------------------------------------- |
+| `count` | Number of JavaScript files found.         |
+| `files` | JSON array with the paths of those files. |
+
+`changed` and `added` read the diff from the GitHub API, so on pull requests the job needs `pull-requests: read`. On events without a diff, such as `workflow_dispatch`, every file is checked.
+
+## With npm
+
+Run it once, without installing:
 
 ```sh
 npx ts-only
 ```
 
-It exits with 1 when JavaScript files are found. Run it in a pre-commit hook to catch them before CI.
-
-## Config file
-
-The Action and the CLI read the same config, from `.ts-onlyrc.json` or a `"ts-only"` key in `package.json`:
-
-```json
-{ "exclude": ["scripts/legacy"], "extensions": ["js", "jsx"] }
-```
-
-Action inputs add to `exclude` and replace `extensions`.
-
-## Development
+Or add it to your project:
 
 ```sh
-npm install
-npm test        # node --test
-npm run lint
-npm run tscheck
+npm install --save-dev ts-only
 ```
 
-### Releasing
+```json
+{
+  "scripts": {
+    "check:ts-only": "ts-only"
+  }
+}
+```
 
-Releases are automatic. Start the pull request title with `patch:`, `minor:` or `major:`; a check enforces it. When the pull request is squash-merged into `main`, the Release workflow:
+**Before every commit**, with [Husky](https://typicode.github.io/husky/):
 
-- bumps the version from the prefixed commits since the last tag;
-- adds the release notes to the top of [`CHANGELOG.md`](CHANGELOG.md);
-- tags `vX.Y.Z`, moves `v1` and creates the GitHub release;
-- publishes to npm.
+```sh
+echo "npx ts-only" >> .husky/pre-commit
+```
 
-Commits without a prefix don't release anything.
+**In any other CI** (GitLab, CircleCI, Bitbucket…), run it as a step:
+
+```sh
+npx ts-only
+```
+
+The command exits with `1` when it finds JavaScript files, `0` when there are none, and `2` when it can't run (for example, outside a git repository).
+
+## Excluding files
+
+For files that have to stay JavaScript, add a `.ts-onlyrc.json` at the root of the repository:
+
+```json
+{ "exclude": ["scripts/legacy", "public/vendor/analytics.js"] }
+```
+
+Or a `"ts-only"` key in `package.json`:
+
+```json
+{
+  "ts-only": { "exclude": ["scripts/legacy"] }
+}
+```
+
+An entry matches a folder name anywhere in the repository (`legacy`), a path (`scripts/legacy`) or a single file. The CLI and the GitHub Action both read it; the Action's `exclude` input adds to it.

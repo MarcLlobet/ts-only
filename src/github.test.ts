@@ -8,7 +8,6 @@ import { annotation, getChangedFiles, readInputs } from "./github.ts";
 test("readInputs reads the action inputs with defaults", () => {
   assert.deepEqual(readInputs({}), {
     path: ".",
-    extensions: [],
     exclude: [],
     fail: true,
     scope: "all",
