@@ -9,10 +9,8 @@ inputs:
   path:
     description: Directory to check.
     default: "."
-  extensions:
-    description: Extensions that count as JavaScript (default js, jsx, mjs, cjs).
   exclude:
-    description: Extra folders or paths to skip, besides node_modules, dist and .git.
+    description: Folders or files to skip, separated by commas or new lines. Files ignored by .gitignore are always skipped.
   fail:
     description: Set to false to report JavaScript files as warnings without failing.
     default: "true"
