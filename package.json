@@ -1,6 +1,6 @@
 {
   "name": "ts-only",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Keep a repository TypeScript-only: a CLI and GitHub Action that fail when JavaScript files appear.",
   "keywords": [
     "typescript",
