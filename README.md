@@ -29,7 +29,7 @@ jobs:
   ts-only:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: MarcLlobet/ts-only@v1
 ```
 
@@ -47,7 +47,7 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: MarcLlobet/ts-only@v1
         with:
           scope: added
